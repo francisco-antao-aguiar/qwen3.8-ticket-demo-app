@@ -1,0 +1,61 @@
+# TicketShop — full stack in one command:
+#   docker compose up --build
+#
+# What starts:
+#   frontend  (Angular dev server)  -> http://localhost:4200
+#   backend   (Spring Boot + H2)    -> http://localhost:8080/api  (H2 console: /h2-console)
+#   mailpit   (local mail server)   -> http://localhost:8025  (SMTP on 1025, internal)
+#
+# Stop everything:  docker compose down
+name: ticketshop
+
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: ticketshop-mailpit
+    ports:
+      - "1025:1025" # SMTP — the backend "sends" confirmation emails here
+      - "8025:8025" # Web UI + REST API — browse the emails that were sent
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8025"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ticketshop-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Override spring.mail.host (defaults to localhost in application.properties).
+      # Inside the compose network the mail server is reachable by service name.
+      SPRING_MAIL_HOST: mailpit
+    depends_on:
+      mailpit:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/artists | grep -q '\"id\"' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  frontend:
+    image: node:20-bookworm-slim
+    container_name: ticketshop-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app # source is bind-mounted, so ng serve hot-reloads your edits
+      - /app/node_modules # anonymous volume: keep Linux node_modules OUT of the Windows host folder
+    command: sh -c "npm ci && npx ng serve --host 0.0.0.0"
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    restart: unless-stopped
