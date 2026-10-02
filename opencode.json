@@ -1,0 +1,42 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "llama.cpp": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "llama-server (local, RTX 3090)",
+      "options": {
+        "baseURL": "http://127.0.0.1:8090/v1"
+      },
+      "models": {
+        "qwen3.8-27b-plan": {
+          "name": "Qwen3.8 27B - plan (xhigh, 96K)",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": {
+            "context": 98304,
+            "output": 32768
+          }
+        },
+        "qwen3.8-27b-fast": {
+          "name": "Qwen3.8 27B - fast (medium, 128K)",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          }
+        },
+        "qwen3.8-27b": {
+          "name": "Qwen3.8 27B - safe (no drafter, 96K)",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": {
+            "context": 98304,
+            "output": 16384
+          }
+        }
+      }
+    }
+  },
+  "model": "llama.cpp/qwen3.8-27b-fast"
+}
