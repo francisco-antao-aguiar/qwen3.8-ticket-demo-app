@@ -1,0 +1,10 @@
+# Build output
+backend/target/
+frontend/dist/
+frontend/.angular/
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
